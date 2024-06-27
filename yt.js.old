@@ -1,0 +1,29 @@
+// ==UserScript==
+// @name         YouTube Ad Speedup
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Speeds up YouTube ads automatically
+// @match        *://*.youtube.com/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const adSpeedMultiplier = 999; // Adjust this value to change ad speed
+
+    function speedUpAd() {
+        const video = document.querySelector('video');
+        const adElement = document.querySelector('.ad-showing');
+        
+        if (video && adElement) {
+            video.playbackRate = adSpeedMultiplier;
+        } else if (video) {
+            video.playbackRate = 1; // Reset to normal speed for non-ad videos
+        }
+    }
+
+    // Run the function periodically to check for ads
+    setInterval(speedUpAd, 1000);
+})();
+
