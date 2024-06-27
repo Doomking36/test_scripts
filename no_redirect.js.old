@@ -1,0 +1,103 @@
+// ==UserScript==
+// @name         Link Redirect Confirmation
+// @namespace    http://tampermonkey.net/
+// @version      1.0
+// @description  Creates a popup window for confirmation when a website attempts to redirect or open a link
+// @match        *://*/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Function to create and show the confirmation popup
+    function showConfirmationPopup(url) {
+        const popup = document.createElement('div');
+        popup.style.cssText = `
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: white;
+            border: 2px solid #ccc;
+            padding: 20px;
+            z-index: 9999;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        `;
+
+        popup.innerHTML = `
+            <p>This page is trying to redirect you to:</p>
+            <p><strong>${url}</strong></p>
+            <p>Do you want to proceed?</p>
+            <button id="confirmRedirect">Yes</button>
+            <button id="cancelRedirect">No</button>
+        `;
+
+        document.body.appendChild(popup);
+
+        return new Promise((resolve) => {
+            document.getElementById('confirmRedirect').addEventListener('click', () => {
+                document.body.removeChild(popup);
+                resolve(true);
+            });
+
+            document.getElementById('cancelRedirect').addEventListener('click', () => {
+                document.body.removeChild(popup);
+                resolve(false);
+            });
+        });
+    }
+
+    // Intercept link clicks
+    document.addEventListener('click', async function(e) {
+        const link = e.target.closest('a');
+        if (link) {
+            e.preventDefault();
+            e.stopPropagation();
+
+            const confirmed = await showConfirmationPopup(link.href);
+            if (confirmed) {
+                window.location.href = link.href;
+            }
+        }
+    }, true);
+
+    // Intercept form submissions
+    document.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const form = e.target;
+        const confirmed = await showConfirmationPopup(form.action);
+        if (confirmed) {
+            form.submit();
+        }
+    }, true);
+
+    // Intercept window.location changes
+    const originalAssign = window.location.assign;
+    window.location.assign = async function(url) {
+        const confirmed = await showConfirmationPopup(url);
+        if (confirmed) {
+            originalAssign.call(window.location, url);
+        }
+    };
+
+    const originalReplace = window.location.replace;
+    window.location.replace = async function(url) {
+        const confirmed = await showConfirmationPopup(url);
+        if (confirmed) {
+            originalReplace.call(window.location, url);
+        }
+    };
+
+    // Intercept window.open
+    const originalOpen = window.open;
+    window.open = async function(url, name, features) {
+        const confirmed = await showConfirmationPopup(url);
+        if (confirmed) {
+            return originalOpen.call(window, url, name, features);
+        }
+    };
+})();
+

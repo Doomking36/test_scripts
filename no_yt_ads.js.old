@@ -1,0 +1,36 @@
+// ==UserScript==
+// @name         Remove YouTube In-Feed Ad Layout
+// @namespace    http://tampermonkey.net/
+// @version      0.1
+// @description  Removes the in-feed ad layout from YouTube pages
+// @match        https://www.youtube.com/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    function removeAdLayout() {
+        const adLayout = document.querySelector('div#fulfilled-layout.style-scope.ytd-ad-slot-renderer');
+        if (adLayout) {
+            adLayout.remove();
+            console.log('In-feed ad layout removed');
+        }
+    }
+
+    // Run the function immediately
+    removeAdLayout();
+
+    // Set up a MutationObserver to watch for changes in the DOM
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                removeAdLayout();
+            }
+        });
+    });
+
+    // Start observing the document with the configured parameters
+    observer.observe(document.body, { childList: true, subtree: true });
+})();
+

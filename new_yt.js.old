@@ -1,0 +1,41 @@
+// ==UserScript==
+// @name         YouTube Ad Speedup and Skip
+// @namespace    http://tampermonkey.net/
+// @version      1.1
+// @description  Speeds up YouTube ads and automatically skips them
+// @match        *://*.youtube.com/*
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    const adSpeedMultiplier = 16; // Maximum effective speed
+    const checkInterval = 50; // Check every 50ms
+
+    function handleAd() {
+        const video = document.querySelector('video');
+        const adElement = document.querySelector('.ad-showing');
+        
+        if (video && adElement) {
+            video.playbackRate = adSpeedMultiplier;
+            video.currentTime = video.duration - 0.1; // Seek to near the end of the ad
+        } else if (video) {
+            video.playbackRate = 1; // Reset to normal speed for non-ad videos
+        }
+    }
+
+    function skipAd() {
+        const skipButton = document.querySelector('.ytp-ad-skip-button');
+        if (skipButton) {
+            skipButton.click();
+        }
+    }
+
+    // Run the functions periodically to check for ads and skip buttons
+    setInterval(() => {
+        handleAd();
+        skipAd();
+    }, checkInterval);
+})();
+
